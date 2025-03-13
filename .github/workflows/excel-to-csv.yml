@@ -24,20 +24,8 @@ jobs:
       - name: Install Dependencies
         run: pip install pandas openpyxl
 
-      - name: Convert Excel Files to CSV
-        run: |
-          mkdir -p csv_output
-          for file in *.xlsx; do
-            if [ -f "$file" ]; then
-              filename=$(basename -- "$file")
-              filename_noext="${filename%.*}"
-              python3 - <<EOF
-import pandas as pd
-df = pd.read_excel("$file")
-df.to_csv(f"csv_output/${filename_noext}.csv", index=False)
-EOF
-            fi
-          done
+      - name: Run Python Script to Convert Excel to CSV
+        run: python convert_excel_to_csv.py
 
       - name: Commit and Push CSV Files
         run: |
@@ -45,6 +33,6 @@ EOF
           git config --global user.name "GitHub Actions"
           git add csv_output/*.csv
           git diff --quiet && git diff --staged --quiet || git commit -m "Auto-converted Excel files to CSV"
-          git push origin main
+          git push origin staging
         continue-on-error: true
 
