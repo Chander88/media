@@ -29,14 +29,16 @@ jobs:
           mkdir -p csv_output
           for file in *.xlsx; do
             if [ -f "$file" ]; then
-              python -c "
+              python <<EOF
 import pandas as pd
 import os
-excel_file = '$file'
+
+excel_file = "$file"
 df = pd.read_excel(excel_file)
-csv_file = 'csv_output/' + os.path.splitext(excel_file)[0] + '.csv'
-df.to_csv(csv_file, index=False)
-"
+
+csv_filename = "csv_output/" + os.path.splitext(excel_file)[0] + ".csv"
+df.to_csv(csv_filename, index=False)
+EOF
             fi
           done
 
@@ -45,7 +47,7 @@ df.to_csv(csv_file, index=False)
           git config --global user.email "github-actions@github.com"
           git config --global user.name "GitHub Actions"
           git add csv_output/*.csv
-          git commit -m "Auto-converted Excel files to CSV"
+          git commit -m "Auto-converted Excel files to CSV" || echo "No changes to commit"
           git push origin main
         continue-on-error: true
 
