@@ -4,9 +4,7 @@ on:
   push:
     branches:
       - staging
-  schedule:
-    - cron: '0 0 * * *' # Runs daily at midnight (optional)
-  workflow_dispatch: # Allows manual trigger
+  workflow_dispatch:
 
 jobs:
   convert-excel-to-csv:
@@ -15,6 +13,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}  # Use GitHub's built-in token
 
       - name: Set Up Python
         uses: actions/setup-python@v4
@@ -32,7 +32,9 @@ jobs:
           git config --global user.email "github-actions@github.com"
           git config --global user.name "GitHub Actions"
           git add csv_output/*.csv
-          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-converted Excel files to CSV"
+          git commit -m "Auto-converted Excel files to CSV" || echo "No changes to commit"
           git push origin staging
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Use GitHub Token for authentication
         continue-on-error: true
 
