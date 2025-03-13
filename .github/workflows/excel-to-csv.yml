@@ -1,0 +1,51 @@
+name: Convert Excel to CSV
+
+on:
+  push:
+    branches:
+      - staging
+  schedule:
+    - cron: '0 0 * * *' # Runs daily at midnight (optional)
+  workflow_dispatch: # Allows manual trigger
+
+jobs:
+  convert-excel-to-csv:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set Up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install Dependencies
+        run: pip install pandas openpyxl
+
+      - name: Convert Excel Files to CSV
+        run: |
+          mkdir -p csv_output
+          for file in *.xlsx; do
+            if [ -f "$file" ]; then
+              python -c "
+import pandas as pd
+import os
+excel_file = '$file'
+df = pd.read_excel(excel_file)
+csv_file = 'csv_output/' + os.path.splitext(excel_file)[0] + '.csv'
+df.to_csv(csv_file, index=False)
+"
+            fi
+          done
+
+      - name: Commit and Push CSV Files
+        run: |
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "GitHub Actions"
+          git add csv_output/*.csv
+          git commit -m "Auto-converted Excel files to CSV"
+          git push origin main
+        continue-on-error: true
+
